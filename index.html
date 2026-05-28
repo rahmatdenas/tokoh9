@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Heritage Sites Map – Encyclopedia of Philippine Heritage</title>
+<title>Peta Tokoh Indonesia – Berdasarkan Tempat Kelahiran</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400,600,600i,700|Merriweather:300,300i" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
@@ -13,48 +13,62 @@
 <body>
 <section id="panel">
   <header id="branding" role="banner">
-    <p>Encyclopedia of Philippine Heritage</p>
-    <h1>Heritage Sites Map</h1>
+    <p>Ensiklopedia Tokoh</p>
+    <h1>Peta Kelahiran Tokoh Indonesia</h1>
   </header>
   <nav>
     <ul>
-      <li><a href="#index">Index</a></li>
-      <li><a href="#about">About</a></li>
+      <li><a href="#index">Daftar Indeks</a></li>
+      <li><a href="#about">Tentang Peta</a></li>
     </ul>
   </nav>
+  
   <div id="loading" class="panel-content" data-display="flex">
     <div class="loader"></div>
   </div>
+  
   <section id="index" class="panel-content" data-display="flex">
-    <header>
-      <label for="filter">Filter</label>
-      <div id="filter">
-        <select>
-          <option value="all">Semua masjid – </option>
-        </select>
+  <header>
+      <div style="display:flex; gap:12px;">
+        <div class="filter-box" style="flex:1;">
+          <select id="filter-region" style="width:100%; padding:5px;">
+            <option value="all">Semua Tempat Lahir – </option>
+          </select>
+        </div>
       </div>
+
+      <div id="filter-pekerjaan-buttons" style="display:flex; flex-wrap:wrap; gap:5px; padding-top: 15px;padding-bottom: 15px;">
+        <button class="feat-btn active" id="btn-all-pekerjaan" data-filter="all">Semua Pekerjaan</button>
+        </div>
+
+<div class="filter-box">
+  <select id="filter-mode-select" onchange="currentFilterMode = this.value; applyIntersectionFilter();" style="padding: 5px;">
+    <option value="union">Tampilkan Semua (0 Tokoh)</option>
+    <option value="intersection">Hanya Irisan (0 Tokoh)</option>
+  </select>
+</div>
     </header>
+    
     <ol id="index-list"></ol>
   </section>
-  <section id="details" class="panel-content" data-display="block"><!-- dummy node --></section>
+  
+  <section id="details" class="panel-content" data-display="block">
+    </section>
+  
   <section id="about" class="panel-content" data-display="block">
-    <p>This <b>Heritage Sites Map</b> shows the location of designated cultural and heritage sites of the Philippines.
-      Each heritage site is represented by a map marker that when clicked provides more information about the site.</p>
-    <img id="eph" src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Encyclopedia_of_Philippine_Heritage_logo.svg/125px-Encyclopedia_of_Philippine_Heritage_logo.svg.png" alt="Encyclopedia of Philippine Heritage">
-    <p>The data on these heritage sites comes from <a href="https://www.wikidata.org/">Wikidata</a>, a sister
-      project of Wikipedia, and is compiled as part of the <i><b>Encyclopedia of Philippine Heritage</b></i>, a
-      program of <a href="http://www.wikimedia.org.ph/">Wikimedia Philippines</a>.</p>
-    <p>If you are familiar with the Wikidata Query Service and want to obtain or explore the raw data, please refer
-      to this <a href="#" id="wdqs-link">query</a>.</p>
-    <p>To report bugs, suggest improvements, or see the source code of this map app, please refer to this app’s
-      <a href="https://github.com/WMPH/eph-heritage-sites-map">GitHub repository</a>.</p>
+    <p><b>Peta Persebaran Tokoh Indonesia</b> ini menampilkan visualisasi titik lahir tokoh-tokoh terkemuka dari berbagai profesi di Indonesia.</p>
+    
+    <p>Data mengenai profil tokoh, jenis kelamin, profesi ganda, dan lokasi spesifik kelahiran mereka ditarik secara dinamis dari <a href="https://www.wikidata.org/" target="_blank">Wikidata</a>, basis pengetahuan bebas yang menjadi proyek saudari Wikipedia.</p>
+    
+    <p>Jika Anda familiar dengan bahasa kueri SPARQL dan ingin mengeksplorasi data mentah dari peta ini, silakan lihat <a href="#" id="wdqs-link">tautan kueri berikut</a>.</p>
   </section>
 </section>
+
 <section id="map"></section>
+
 <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
 <script src="js/leaflet.extra-markers.min.js"></script>
-<script src="js/osmtogeojson.js"></script>
 <script src="js/load-jsonp.js"></script>
 <script src="js/eph-heritage-sites-globals.js"></script>
 <script src="js/eph-common.js"></script>
