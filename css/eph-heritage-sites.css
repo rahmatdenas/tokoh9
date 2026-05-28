@@ -46,15 +46,19 @@ nav li a:hover {
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
-  box-sizing: content-box;
+  box-sizing: border-box; /* 1. Ubah ke border-box agar tinggi elemen lebih stabil */
   height: 32px;
-  width: 290px;
-  padding: 0 5px;
+  width: 100%; 
+  padding: 0 35px 0 10px; /* 2. Beri padding kanan (35px) agar teks panjang tidak menabrak panah SVG, dan kiri (10px) */
+  margin: 0; /* 3. Wajib: Reset margin bawaan browser yang sering menggeser teks */
   border: none;
   font-size: 12.5px;
-  line-height: 32px;
+  line-height: 32px; /* 4. Membantu teks rata tengah vertikal */
+  vertical-align: middle; /* 5. Memaksa baseline teks berada di tengah */
   background: none;
   color: #611;
+  outline: none;
+  cursor: pointer; /* Opsional: Ubah kursor jadi tangan agar lebih UX-friendly */
 }
 select::-moz-focus-inner {
   outline: none !important;
