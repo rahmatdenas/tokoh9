@@ -317,54 +317,98 @@ function generateFilterSelect() {
 }
 
 // 7. Kalkulator Tombol Angka (Dinamis)
+// 7. Kalkulator Tombol Angka (Dinamis)
 function updateFeatureCounts() {
   let totalUnion = 0;
   let totalIntersection = 0;
   let tempJobCounts = {};
+  
+  // Wadah untuk menghitung jumlah dinamis pada dropdown
+  let tempRegionCounts = { 'all': 0, 'indonesia_only': 0 };
+  let tempGenderCounts = { 'all': 0, 'Laki-laki': 0, 'Perempuan': 0 };
 
-  Object.keys(PekerjaanIndex).forEach(pkj => {
-    if (pkj !== 'all') tempJobCounts[pkj] = 0;
-  });
+  // Inisialisasi awal nilai 0
+  Object.keys(PekerjaanIndex).forEach(pkj => { if (pkj !== 'all') tempJobCounts[pkj] = 0; });
+  Object.keys(BirthplaceIndex).forEach(region => { if (region !== 'all') tempRegionCounts[region] = 0; });
 
+  // Proses kalkulasi semua data
   Object.values(Records).forEach(record => {
+    // 1. Uji apakah record ini lolos di masing-masing filter
     let matchRegion = false;
-    if (currentRegionFilter === 'all') {
-        matchRegion = true;
-    } else if (currentRegionFilter === 'indonesia_only') {
-        matchRegion = !record.areaTags.has('Luar Negeri');
-    } else {
-        matchRegion = record.areaTags.has(currentRegionFilter);
-    }
+    if (currentRegionFilter === 'all') matchRegion = true;
+    else if (currentRegionFilter === 'indonesia_only') matchRegion = !record.areaTags.has('Luar Negeri');
+    else matchRegion = record.areaTags.has(currentRegionFilter);
 
-    // <--- [BARU] Logika pencocokan Jenis Kelamin
     let matchGender = false;
-    if (currentGenderFilter === 'all') {
-        matchGender = true;
-    } else if (currentGenderFilter === record.jenisKelamin) {
-        matchGender = true;
+    if (currentGenderFilter === 'all') matchGender = true;
+    else if (currentGenderFilter === record.jenisKelamin) matchGender = true;
+
+    let matchPekerjaan = true;
+    if (activePekerjaan.size > 0) {
+      if (currentFilterMode === 'union') {
+        matchPekerjaan = Array.from(activePekerjaan).some(pkj => record.pekerjaan.has(pkj));
+      } else if (currentFilterMode === 'intersection') {
+        matchPekerjaan = Array.from(activePekerjaan).every(pkj => record.pekerjaan.has(pkj));
+      }
     }
 
-    // Hanya hitung jika Region dan Gender sama-sama cocok
+    // 2. Hitung jumlah Pekerjaan (jika wilayah & gender cocok)
     if (matchRegion && matchGender) {
       record.pekerjaan.forEach(pkj => {
-        if (tempJobCounts[pkj] !== undefined) {
-          tempJobCounts[pkj]++;
-        }
+        if (tempJobCounts[pkj] !== undefined) tempJobCounts[pkj]++;
       });
 
-      let hasAny = true;
-      let hasAll = true;
-
+      let hasAny = true; let hasAll = true;
       if (activePekerjaan.size > 0) {
         hasAny = Array.from(activePekerjaan).some(pkj => record.pekerjaan.has(pkj));
         hasAll = Array.from(activePekerjaan).every(pkj => record.pekerjaan.has(pkj));
       }
-
       if (hasAny) totalUnion++;
       if (hasAll) totalIntersection++;
     }
+
+    // 3. Hitung jumlah Wilayah (jika gender & pekerjaan cocok)
+    if (matchGender && matchPekerjaan) {
+      tempRegionCounts['all']++;
+      if (!record.areaTags.has('Luar Negeri')) tempRegionCounts['indonesia_only']++;
+      
+      record.areaTags.forEach(tag => {
+        if (tempRegionCounts[tag] !== undefined) tempRegionCounts[tag]++;
+      });
+    }
+
+    // 4. Hitung jumlah Gender (jika wilayah & pekerjaan cocok)
+    if (matchRegion && matchPekerjaan) {
+      tempGenderCounts['all']++;
+      if (record.jenisKelamin === 'Laki-laki') tempGenderCounts['Laki-laki']++;
+      if (record.jenisKelamin === 'Perempuan') tempGenderCounts['Perempuan']++;
+    }
   });
 
+  // 5. Perbarui teks di dropdown Wilayah secara otomatis
+  let selectRegion = document.getElementById('filter-region');
+  if (selectRegion) {
+    Array.from(selectRegion.options).forEach(opt => {
+      let val = opt.value;
+      let count = tempRegionCounts[val] || 0;
+      if (val === 'all') opt.textContent = `Semua Tempat Lahir – ${count} Tokoh`;
+      else if (val === 'indonesia_only') opt.textContent = `Seluruh Indonesia – ${count} Tokoh`;
+      else opt.textContent = `${val} – ${count} Tokoh`;
+    });
+  }
+
+  // 6. Perbarui teks di dropdown Gender secara otomatis
+  let selectGender = document.getElementById('filter-gender');
+  if (selectGender) {
+    Array.from(selectGender.options).forEach(opt => {
+      let val = opt.value;
+      let count = tempGenderCounts[val] || 0;
+      if (val === 'all') opt.textContent = `Semua Jenis Kelamin – ${count} Tokoh`;
+      else opt.textContent = `${val} – ${count} Tokoh`;
+    });
+  }
+
+  // 7. Perbarui angka dan urutan tombol Pekerjaan
   Object.keys(tempJobCounts).forEach(pkj => {
     if (PekerjaanButtons[pkj]) {
       PekerjaanButtons[pkj].textContent = `${PekerjaanIndex[pkj].label} (${tempJobCounts[pkj]})`;
@@ -391,62 +435,6 @@ function updateFeatureCounts() {
   if (modeSelect) {
     modeSelect.options[0].textContent = `Tampilkan Semua – ${totalUnion} Tokoh`;
     modeSelect.options[1].textContent = `Hanya Irisan – ${totalIntersection} Tokoh (pilih min. 2 pekerjaan)`;
-  }
-}
-
-// 8. Mesin Eksekutor Gabungan/Irisan
-function applyIntersectionFilter() {
-  Cluster.clearLayers();
-
-  let ol = document.getElementById('index-list');
-  if(ol) ol.innerHTML = '';
-
-  let validMarkers = [];
-
-  let validRecords = Object.values(Records).filter(record => {
-    let matchRegion = false;
-    if (currentRegionFilter === 'all') {
-        matchRegion = true;
-    } else if (currentRegionFilter === 'indonesia_only') {
-        matchRegion = !record.areaTags.has('Luar Negeri');
-    } else {
-        matchRegion = record.areaTags.has(currentRegionFilter);
-    }
-
-    // <--- [BARU] Penyaring Jenis Kelamin
-    let matchGender = false;
-    if (currentGenderFilter === 'all') {
-        matchGender = true;
-    } else if (currentGenderFilter === record.jenisKelamin) {
-        matchGender = true;
-    }
-
-    let matchPekerjaan = true;
-    if (activePekerjaan.size > 0) {
-      if (currentFilterMode === 'union') {
-        matchPekerjaan = Array.from(activePekerjaan).some(pkj => record.pekerjaan.has(pkj));
-      } else if (currentFilterMode === 'intersection') {
-        matchPekerjaan = Array.from(activePekerjaan).every(pkj => record.pekerjaan.has(pkj));
-      }
-    }
-
-    // Filter final mewajibkan Region, Gender, dan Pekerjaan sesuai
-    return matchRegion && matchGender && matchPekerjaan;
-  }).sort((a, b) => {
-    return a.indexTitle.localeCompare(b.indexTitle);
-  });
-
-  validRecords.forEach(record => {
-    if (record.mapMarker) validMarkers.push(record.mapMarker);
-    if (record.indexLi && ol) ol.appendChild(record.indexLi);
-  });
-
-  if (validMarkers.length > 0) {
-    Cluster.addLayers(validMarkers);
-    let bounds = Cluster.getBounds();
-    if (bounds && Object.keys(bounds).length > 0) {
-       Map.fitBounds(bounds);
-    }
   }
 }
 
