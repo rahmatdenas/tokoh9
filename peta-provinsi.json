@@ -3043,14 +3043,6 @@
       },
       {
         "tempatLahirQid": {
-          "value": "Q1948643"
-        },
-        "provinsiLabel": {
-          "value": "Kepulauan Bangka Belitung"
-        }
-      },
-      {
-        "tempatLahirQid": {
           "value": "Q8119"
         },
         "provinsiLabel": {
@@ -11635,18 +11627,10 @@
       },
       {
         "tempatLahirQid": {
-          "value": "Q1948643"
-        },
-        "provinsiLabel": {
-          "value": "Bangka Belitung"
-        }
-      },
-      {
-        "tempatLahirQid": {
           "value": "Q4197752"
         },
         "provinsiLabel": {
-          "value": "Bangka Belitung"
+          "value": "Kepulauan Bangka Belitung"
         }
       },
       {
